@@ -1,0 +1,128 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "2afa3c60-e108-48e3-af16-f70099fbd13d",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import calendar\n",
+    "import netCDF4\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import cartopy.crs as ccrs\n",
+    "import matplotlib.pyplot as plt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "8c449718-2060-4c67-b6bc-126aad779794",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def load_netcdf(path, year):\n",
+    "    \"\"\"\n",
+    "    lat.shape=280\n",
+    "    lon.shape=360\n",
+    "    \"\"\"\n",
+    "    nc = netCDF4.Dataset(path)\n",
+    "    lat = nc['latitude'][:]\n",
+    "    lon = nc['longitude'][:]\n",
+    "    precip = nc['precip'][:]\n",
+    "    if calendar.isleap(year):\n",
+    "        precip = np.reshape(precip, (366, 280, 360))\n",
+    "    else:\n",
+    "        precip = np.reshape(precip, (365, 280, 360))\n",
+    "    return lat, lon, precip"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "def8cb57-2175-43d4-9cf1-e9a58e44b797",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def netcdf_to_csv(precip, csv_path='precip.csv'):\n",
+    "    precip = precip.reshape(-1)\n",
+    "    df_precip = pd.DataFrame(data=precip)\n",
+    "    df_precip.to_csv(csv_path)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "c392bdc0-1112-4e7a-bd04-e1fdd3249181",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# create arrary: array=[year, month, variable, lat, lon]\n",
+    "def main():\n",
+    "    save_lst = []\n",
+    "    for year in range(1951, 2008):\n",
+    "        \"\"\" aphrodite1 contains 57 years daily dataset\"\"\"\n",
+    "        path = f\"/docker/mnt/d/research/D1/data/aphrodite/V1101_MA_025d/APHRO_MA_025deg_V1101.{year}.nc\"\n",
+    "        lat, lon, precip = load_netcdf(path, year)\n",
+    "        save_lst.append(precip[:, ::-1, :])\n",
+    "        csv_path = f\"precip_{year}\"\n",
+    "        netcdf_to_csv(precip, csv_path)\n",
+    "    save_lst = np.array(save_lst)\n",
+    "    print(save_lst.shape)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "dde0d0f5-b537-4823-aadb-2d1771491cce",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "year = 1974\n",
+    "path = f\"/docker/mnt/d/research/D1/data/aphrodite/V1101_MA_025d/APHRO_MA_025deg_V1101.{year}.nc\"\n",
+    "lat, lon, precip = load_netcdf(path, year)\n",
+    "netcdf_to_csv(precip)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3018e08b-d69b-44cf-9205-2d138bc021a4",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
